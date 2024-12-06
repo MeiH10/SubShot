@@ -23,32 +23,33 @@ def get_subtitle(img_path):
 
 def rename_files(path):
     folder = Path(path)
-
     renamed_folder = folder / 'renamed'
     renamed_folder.mkdir(exist_ok=True)
     
     supported_file_types = {'.png', '.jpg', '.jpeg'}
     
-    for image_files in folder.iterdir():
-        # Skip the renamed folder itself
-        if image_files.name == 'renamed':
+    for image_file in folder.rglob('*'):
+        if 'renamed' in image_file.parts:
             continue
             
-        if image_files.suffix.lower() in supported_file_types:
+        if image_file.is_file() and image_file.suffix.lower() in supported_file_types:
             try:
-                sub = get_subtitle(image_files)
+                sub = get_subtitle(image_file)
                 if sub:
-                    new_name = sub + image_files.suffix
-
+                    new_name = sub + image_file.suffix
                     new_path = renamed_folder / new_name
-
-                    image_files.rename(new_path)
-                    print(f"Renamed and moved: {image_files.name} -> {new_name}")
+                    counter = 1
+                    while new_path.exists():
+                        new_name = f"{sub}_{counter}{image_file.suffix}"
+                        new_path = renamed_folder / new_name
+                        counter += 1
+                    image_file.rename(new_path)
+                    print(f"Renamed and moved: {image_file.name} -> {new_name}")
                 else:
-                    print(f"No sub found in: {image_files.name}")
+                    print(f"No sub found in: {image_file.name}")
             except Exception as e:
-                print(f"Error processing {image_files.name}: {str(e)}")
+                print(f"Error processing {image_file.name}: {str(e)}")
 
 if __name__ == "__main__":
-    screenshots_folder = r'./sample1000'
+    screenshots_folder = r'./anime_screenshots'
     rename_files(screenshots_folder)
